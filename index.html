@@ -26,7 +26,6 @@ function easeOutBounce(x) {
       return n1 * (x -= 2.625 / d1) * x + 0.984375;
   }
 }
-
 function easeInBack(x) {
   const c1 = 1.70158;
   const c3 = c1 + 1;
@@ -34,32 +33,43 @@ function easeInBack(x) {
   return c3 * x * x * x - c1 * x * x;
 }
 
+
+/* psst hey kid want some vector math? */
+const mulf = ({ x, y }, f) => ({ x: x * f, y: y * f });
+const divf = ({ x, y }, f) => ({ x: x / f, y: y / f });
+const addf = ({ x, y }, f) => ({ x: x + f, y: y + f });
+const subf = ({ x, y }, f) => ({ x: x - f, y: y - f });
+
+const mul = (a, b) => ({ x: a.x * b.x, y: a.y * b.y });
+const div = (a, b) => ({ x: a.x / b.x, y: a.y / b.y });
+const add = (a, b) => ({ x: a.x + b.x, y: a.y + b.y });
+const sub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y });
+
+const dot = (a, b) => a.x * b.x + a.y * b.y;
+const mag = (a) => Math.sqrt(dot(a, a));
+const norm = (a) => divf(a, mag(a) || 1);
+
+
+/* let's get this party started */
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext('2d');
 
+
+/* these drawing utils'll come in handy */
 const circle = (x, y, radius) => {
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, Math.PI*2);
   ctx.fill();
 }
-
-(window.onresize = () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-})();
-
-(function frame() {
-  const { width, height } = canvas;
-  ctx.fillStyle = "rgb(47, 43, 49)";
-  ctx.fillRect(0, 0, width, height);
-
-  ctx.save();
-  ctx.translate(width/2, height/2);
-
+const ellipse = (x, y, rx, ry) => {
+  ctx.beginPath();
+  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI*2);
+  ctx.fill();
+}
+const minion = ({x, y}) => {
   ctx.fillStyle = "#90a4ae";
-  let y = 0;
   y += 6 * Math.sin(Date.now() / 150);
-  circle(0, y, 10);
+  circle(x, y, 10);
   for (let i = 0; i < 3; i++) {
     ctx.fillStyle = "#8ca0aa";
     const r = ((i / 3) + Math.sin(Date.now() / 1500)) * Math.PI*2;
@@ -69,8 +79,52 @@ const circle = (x, y, radius) => {
     else
       space = easeOutBounce(t);
 
-    circle(0 + Math.cos(r) * (6 + space*4),
+    circle(x + Math.cos(r) * (6 + space*4),
            y + Math.sin(r) * (6 + space*4), 7);
+  }
+  ctx.fillStyle = "#CDE7F1";
+  ellipse(x, y, 7, 4);
+  ctx.fillStyle = "#29A0CB";
+  const d = mulf(norm(sub(mouse, { x: 0, y })), 3);
+  circle(x + d.x, y + d.y, 3);
+}
+
+
+/* i want fullscreen, goddamnit */
+(window.onresize = () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+})();
+
+let minions = [
+  { pos: { x:  0, y:  0 } },
+  { pos: { x: 30, y: 20 } },
+];
+
+
+/* yoink what we need out of the browser */
+let mouse = { x: 0, y: 0 };
+let mousedown = false;
+window.onmousedown = () => mousedown = true;
+window.onmouseup = () => mousedown = false;
+window.onmousemove = ev => {
+  mouse.x = ev.pageX - canvas.width/2;
+  mouse.y = ev.pageY - canvas.height/2;
+};
+
+
+(function frame() {
+  const { width, height } = canvas;
+  ctx.fillStyle = "rgb(47, 43, 49)";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.save();
+  ctx.translate(width/2, height/2);
+
+  for (const min of minions) {
+    if (mousedown)
+      min.pos = add(min.pos, mulf(norm(sub(mouse, min.pos)), 3));
+    minion(min.pos);
   }
   
   ctx.restore();
