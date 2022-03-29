@@ -99,6 +99,8 @@ const minion = ({x, y}) => {
 let minions = [
   { pos: { x:  0, y:  0 } },
   { pos: { x: 30, y: 20 } },
+  { pos: { x: 60, y: -20 } },
+  { pos: { x: -30, y: 20 } },
 ];
 
 
@@ -124,6 +126,15 @@ window.onmousemove = ev => {
   for (const min of minions) {
     if (mousedown)
       min.pos = add(min.pos, mulf(norm(sub(mouse, min.pos)), 3));
+
+    for (const otr of minions) if (otr != min) {
+      let delta = sub(otr.pos, min.pos);
+      const dist = mag(delta);
+      if (dist < 40)
+        delta = norm(delta),
+        otr.pos = add(otr.pos, mulf(delta, 40 - dist)),
+        min.pos = sub(min.pos, mulf(delta, 40 - dist));
+    }
     minion(min.pos);
   }
   
