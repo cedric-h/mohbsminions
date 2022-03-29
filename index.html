@@ -1,0 +1,38 @@
+<html>
+  <head>
+    <style>
+      document, body {
+        margin: 0px;
+        padding: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas></canvas>
+    <script>
+const canvas = document.querySelector("canvas");
+const ctx = canvas.getContext('2d');
+
+(window.onresize = () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+})();
+
+(function frame() {
+  const { width, height } = canvas;
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.save();
+  ctx.translate(width/2, height/2);
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(-5, -5, 10, 10);
+  
+  ctx.restore();
+
+  requestAnimationFrame(frame);
+})();
+    </script>
+  </body>
+</html>
