@@ -10,8 +10,38 @@
   <body>
     <canvas></canvas>
     <script>
+
+/* shamelessly stolen from easings.net */
+function easeOutBounce(x) {
+  const n1 = 7.5625;
+  const d1 = 2.75;
+
+  if (x < 1 / d1) {
+      return n1 * x * x;
+  } else if (x < 2 / d1) {
+      return n1 * (x -= 1.5 / d1) * x + 0.75;
+  } else if (x < 2.5 / d1) {
+      return n1 * (x -= 2.25 / d1) * x + 0.9375;
+  } else {
+      return n1 * (x -= 2.625 / d1) * x + 0.984375;
+  }
+}
+
+function easeInBack(x) {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+
+  return c3 * x * x * x - c1 * x * x;
+}
+
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext('2d');
+
+const circle = (x, y, radius) => {
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI*2);
+  ctx.fill();
+}
 
 (window.onresize = () => {
   canvas.width = window.innerWidth;
@@ -20,14 +50,28 @@ const ctx = canvas.getContext('2d');
 
 (function frame() {
   const { width, height } = canvas;
-  ctx.fillStyle = "black";
+  ctx.fillStyle = "rgb(47, 43, 49)";
   ctx.fillRect(0, 0, width, height);
 
   ctx.save();
   ctx.translate(width/2, height/2);
 
-  ctx.fillStyle = "white";
-  ctx.fillRect(-5, -5, 10, 10);
+  ctx.fillStyle = "#90a4ae";
+  let y = 0;
+  y += 6 * Math.sin(Date.now() / 150);
+  circle(0, y, 10);
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = "#8ca0aa";
+    const r = ((i / 3) + Math.sin(Date.now() / 1500)) * Math.PI*2;
+    let t = Date.now() / 1000 % 2;
+    if (t > 1)
+      space = easeInBack(1 - (t - 1));
+    else
+      space = easeOutBounce(t);
+
+    circle(0 + Math.cos(r) * (6 + space*4),
+           y + Math.sin(r) * (6 + space*4), 7);
+  }
   
   ctx.restore();
 
