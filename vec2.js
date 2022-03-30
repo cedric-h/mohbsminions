@@ -1,4 +1,4 @@
-/* psst hey kid want some vector math? */
+/* psst hey kid want some vector math? VECTOR, COMMITTING CRIMES, with DIRECTION and MAGNITUDE! OH YEAH! */
 export const mulf = ({ x, y }, f) => ({ x: x * f, y: y * f });
 export const divf = ({ x, y }, f) => ({ x: x / f, y: y / f });
 export const addf = ({ x, y }, f) => ({ x: x + f, y: y + f });
