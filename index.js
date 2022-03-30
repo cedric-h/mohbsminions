@@ -1,4 +1,5 @@
 import * as v2 from "./vec2.js"
+import * as hex from "./hex.js"
 import * as ease from "./ease.js"
 import SimplexNoise from "https://cdn.skypack.dev/simplex-noise@3.0.1";
 
@@ -14,40 +15,70 @@ const pushDistNoise = newNoise();
 
 const setDiff = (a, b) => new Set([...a].filter(x => !b.has(x)));
 
-const coordsToSet = coords => new Set(coords.map(({x, y}) => x+","+y));
-const coordsFromSet = set => [...set].map(x => (([x, y]) => ({x:+x, y:+y}))(x.split(",")));
+const coordsToSet = coords => new Set(coords.map(v2.toStr));
+const coordsFromSet = set => [...set].map(v2.fromStr);
 
 const dedupCoords = coords => coordsFromSet(coordsToSet(coords));
 const megaHex = n => [...Array(n)].reduce(
-  acc => dedupCoords(acc.flatMap(v2.hexNeighbors)),
-  v2.hexNeighbors({ x: 0, y: 0 })
+  acc => dedupCoords(acc.flatMap(hex.neighbors)),
+  hex.neighbors({ x: 0, y: 0 })
 );
 
-const map = 
+const map = new Map(
   coordsFromSet(setDiff(
-    coordsToSet(megaHex(9)),
+    coordsToSet(megaHex(14)),
     coordsToSet(megaHex(5)),
   ))
-  .map(hex => {
-    const { x, y } = hex;
-    let pos = v2.mulf(v2.axialHexToOffset(hex), 18);
+  .map(hexPos => {
+    const { x, y } = hexPos;
+    let pos = hex.axialToOffset(hexPos);
     const r = Math.PI * pushDirNoise(x,y);
     pos = v2.add(pos, v2.mulf(v2.fromRot(r), 10*pushDistNoise(x,y)));
     return {
       pos,
+      hexPos,
       size: v2.mulf({
         x: 0.7 + 0.3 * (1+sizeXNoise(x, y))/2,
         y: 0.6 + 0.4 * (1+sizeYNoise(x, y))/2,
       }, 32),
-      color: toColor(nLerp(
+      color: nLerp(
         [112,128,144].map(x => x * 0.9),
         [144,112,128].map(x => x * 0.5),
         (1+sizeYNoise(x,y))/2
-      ).map(x => x * (0.3 + 0.7 * (1 - v2.mag(v2.sub(pos, { x: 0, y: 0 })) / 500)))),
+      ),
     };
   })
-  .sort((a, b) => a.pos.y - b.pos.y);
-console.log(map);
+  .sort((a, b) => a.pos.y - b.pos.y)
+  .map(x => [v2.toStr(x.hexPos), x])
+);
+const mapAt = hex => map.get(v2.toStr(hex));
+
+let mapLight = new Map([["0,0", 1]]);
+const lightAt = hex => mapLight.get(v2.toStr(hex)) ?? 0;
+const tickLight = () => {
+  const next = new Map();
+  const hasNext = hex => next.has(v2.toStr(hex));
+  const setNext = (hex, n) => next.set(v2.toStr(hex), n);
+
+  const calcLightAt = hp => {
+    if (hex.neighbors(hp).every(mapAt))
+      return 0.603 * Math.max(...hex.neighbors(hp).map(lightAt));
+    else
+      return 1;
+  }
+
+  for (const k of mapLight.keys()) {
+    const hp = v2.fromStr(k);
+
+    const light = calcLightAt(hp);
+    setNext(hp, light);
+    if (light > 0.1)
+      for (const nhp of hex.neighbors(hp))
+        if (!hasNext(nhp))
+          setNext(nhp, calcLightAt(nhp));
+  }
+  mapLight = next;
+}
 
 await new Promise(res => window.onload = res);
 
@@ -108,14 +139,17 @@ let minions = [
 
 /* yoink what we need out of the browser */
 let mouse = { x: 0, y: 0 };
+let mouseHex = { x: 0, y: 0 };
 let mousedown = false;
 window.onmousedown = () => mousedown = true;
 window.onmouseup = () => mousedown = false;
 window.onmousemove = ev => {
   mouse.x = ev.pageX - canvas.width/2;
   mouse.y = ev.pageY - canvas.height/2;
+  mouseHex = hex.offsetToAxial(mouse);
 };
 
+setInterval(tickLight, 100);
 
 (function frame() {
   const { width, height } = canvas;
@@ -125,8 +159,9 @@ window.onmousemove = ev => {
   ctx.save();
   ctx.translate(width/2, height/2);
 
-  for (const { size, color, pos: { x, y } } of map) {
-    ctx.fillStyle = color;
+  for (const [, { size, hexPos, color, pos: { x, y } }] of map) {
+    const c = v2.eq(hexPos, mouseHex) ? [255, 0, 0] : color;
+    ctx.fillStyle = toColor(nLerp([47, 43, 49], c, lightAt(hexPos)));
     ctx.beginPath();
     for (let i = 0; i < 6; i++) {
       const r = Math.PI * 2 * (i / 6) + Math.PI/4;
@@ -135,6 +170,7 @@ window.onmousemove = ev => {
     }
     ctx.fill();
   }
+  ctx.globalAlpha = 1.0;
 
   for (const min of minions) {
     const { mulf, norm, sub, add } = v2;
