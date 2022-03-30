@@ -1,4 +1,5 @@
 import * as v2 from "./vec2.js"
+import * as hex from "./hex.js"
 import * as ease from "./ease.js"
 import SimplexNoise from "https://cdn.skypack.dev/simplex-noise@3.0.1";
 
@@ -19,8 +20,8 @@ const coordsFromSet = set => [...set].map(x => (([x, y]) => ({x:+x, y:+y}))(x.sp
 
 const dedupCoords = coords => coordsFromSet(coordsToSet(coords));
 const megaHex = n => [...Array(n)].reduce(
-  acc => dedupCoords(acc.flatMap(v2.hexNeighbors)),
-  v2.hexNeighbors({ x: 0, y: 0 })
+  acc => dedupCoords(acc.flatMap(hex.neighbors)),
+  hex.neighbors({ x: 0, y: 0 })
 );
 
 const map = 
@@ -28,13 +29,14 @@ const map =
     coordsToSet(megaHex(9)),
     coordsToSet(megaHex(5)),
   ))
-  .map(hex => {
-    const { x, y } = hex;
-    let pos = v2.mulf(v2.axialHexToOffset(hex), 18);
+  .map(hexPos => {
+    const { x, y } = hexPos;
+    let pos = hex.axialToOffset(hexPos);
     const r = Math.PI * pushDirNoise(x,y);
     pos = v2.add(pos, v2.mulf(v2.fromRot(r), 10*pushDistNoise(x,y)));
     return {
       pos,
+      hexPos,
       size: v2.mulf({
         x: 0.7 + 0.3 * (1+sizeXNoise(x, y))/2,
         y: 0.6 + 0.4 * (1+sizeYNoise(x, y))/2,
@@ -108,12 +110,14 @@ let minions = [
 
 /* yoink what we need out of the browser */
 let mouse = { x: 0, y: 0 };
+let mouseHex = { x: 0, y: 0 };
 let mousedown = false;
 window.onmousedown = () => mousedown = true;
 window.onmouseup = () => mousedown = false;
 window.onmousemove = ev => {
   mouse.x = ev.pageX - canvas.width/2;
   mouse.y = ev.pageY - canvas.height/2;
+  mouseHex = hex.offsetToAxial(mouse);
 };
 
 
@@ -125,8 +129,8 @@ window.onmousemove = ev => {
   ctx.save();
   ctx.translate(width/2, height/2);
 
-  for (const { size, color, pos: { x, y } } of map) {
-    ctx.fillStyle = color;
+  for (const { size, hexPos, color, pos: { x, y } } of map) {
+    ctx.fillStyle = v2.eq(hexPos, mouseHex) ? "red" : color;
     ctx.beginPath();
     for (let i = 0; i < 6; i++) {
       const r = Math.PI * 2 * (i / 6) + Math.PI/4;
