@@ -1,5 +1,53 @@
 import * as v2 from "./vec2.js"
 import * as ease from "./ease.js"
+import SimplexNoise from "https://cdn.skypack.dev/simplex-noise@3.0.1";
+
+const lerp = (a, b, t) => (1 - t) * a + t * b;
+const nLerp = (a, b, t) => a.map((a, i) => lerp(a, b[i], t));
+const toColor = rgb => `rgb(${rgb.join(",")})`;
+
+const newNoise = () => SimplexNoise.prototype.noise2D.bind(new SimplexNoise());
+const sizeXNoise = newNoise();
+const sizeYNoise = newNoise();
+const pushDirNoise = newNoise();
+const pushDistNoise = newNoise();
+
+const setDiff = (a, b) => new Set([...a].filter(x => !b.has(x)));
+
+const coordsToSet = coords => new Set(coords.map(({x, y}) => x+","+y));
+const coordsFromSet = set => [...set].map(x => (([x, y]) => ({x:+x, y:+y}))(x.split(",")));
+
+const dedupCoords = coords => coordsFromSet(coordsToSet(coords));
+const megaHex = n => [...Array(n)].reduce(
+  acc => dedupCoords(acc.flatMap(v2.hexNeighbors)),
+  v2.hexNeighbors({ x: 0, y: 0 })
+);
+
+const map = 
+  coordsFromSet(setDiff(
+    coordsToSet(megaHex(9)),
+    coordsToSet(megaHex(5)),
+  ))
+  .map(hex => {
+    const { x, y } = hex;
+    let pos = v2.mulf(v2.axialHexToOffset(hex), 18);
+    const r = Math.PI * pushDirNoise(x,y);
+    pos = v2.add(pos, v2.mulf(v2.fromRot(r), 10*pushDistNoise(x,y)));
+    return {
+      pos,
+      size: v2.mulf({
+        x: 0.7 + 0.3 * (1+sizeXNoise(x, y))/2,
+        y: 0.6 + 0.4 * (1+sizeYNoise(x, y))/2,
+      }, 32),
+      color: toColor(nLerp(
+        [112,128,144].map(x => x * 0.9),
+        [144,112,128].map(x => x * 0.5),
+        (1+sizeYNoise(x,y))/2
+      ).map(x => x * (0.3 + 0.7 * (1 - v2.mag(v2.sub(pos, { x: 0, y: 0 })) / 500)))),
+    };
+  })
+  .sort((a, b) => a.pos.y - b.pos.y);
+console.log(map);
 
 await new Promise(res => window.onload = res);
 
@@ -76,6 +124,17 @@ window.onmousemove = ev => {
 
   ctx.save();
   ctx.translate(width/2, height/2);
+
+  for (const { size, color, pos: { x, y } } of map) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const r = Math.PI * 2 * (i / 6) + Math.PI/4;
+      ctx[i ? 'lineTo' : 'moveTo'](x + Math.cos(r) * size.x,
+                                   y + Math.sin(r) * size.y);
+    }
+    ctx.fill();
+  }
 
   for (const min of minions) {
     const { mulf, norm, sub, add } = v2;
