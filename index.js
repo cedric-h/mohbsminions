@@ -15,8 +15,8 @@ const pushDistNoise = newNoise();
 
 const setDiff = (a, b) => new Set([...a].filter(x => !b.has(x)));
 
-const coordsToSet = coords => new Set(coords.map(({x, y}) => x+","+y));
-const coordsFromSet = set => [...set].map(x => (([x, y]) => ({x:+x, y:+y}))(x.split(",")));
+const coordsToSet = coords => new Set(coords.map(v2.toStr));
+const coordsFromSet = set => [...set].map(v2.fromStr);
 
 const dedupCoords = coords => coordsFromSet(coordsToSet(coords));
 const megaHex = n => [...Array(n)].reduce(
@@ -24,9 +24,9 @@ const megaHex = n => [...Array(n)].reduce(
   hex.neighbors({ x: 0, y: 0 })
 );
 
-const map = 
+const map = new Map(
   coordsFromSet(setDiff(
-    coordsToSet(megaHex(9)),
+    coordsToSet(megaHex(14)),
     coordsToSet(megaHex(5)),
   ))
   .map(hexPos => {
@@ -45,11 +45,41 @@ const map =
         [112,128,144].map(x => x * 0.9),
         [144,112,128].map(x => x * 0.5),
         (1+sizeYNoise(x,y))/2
-      ).map(x => x * (0.3 + 0.7 * (1 - v2.mag(v2.sub(pos, { x: 0, y: 0 })) / 500)))),
+      )),
     };
   })
-  .sort((a, b) => a.pos.y - b.pos.y);
-console.log(map);
+  .sort((a, b) => a.pos.y - b.pos.y)
+  .map(x => [v2.toStr(x.hexPos), x])
+);
+const mapAt = hex => map.get(v2.toStr(hex));
+
+let mapLight = new Map([["0,0", 1]]);
+const lightAt = hex => mapLight.get(v2.toStr(hex)) ?? 0;
+const tickLight = () => {
+  const next = new Map();
+  const hasNext = hex => next.has(v2.toStr(hex));
+  const setNext = (hex, n) => next.set(v2.toStr(hex), n);
+
+  const calcLightAt = hp => {
+    if (hex.neighbors(hp).every(mapAt))
+      return 0.603 * Math.max(...hex.neighbors(hp).map(lightAt));
+    else
+      return 1;
+  }
+
+  for (const k of mapLight.keys()) {
+    const hp = v2.fromStr(k);
+
+    const light = calcLightAt(hp);
+    setNext(hp, light);
+    if (light > 0.1)
+      for (const nhp of hex.neighbors(hp))
+        if (!hasNext(nhp))
+          setNext(nhp, calcLightAt(nhp));
+  }
+  mapLight = next;
+  console.log(next.size);
+}
 
 await new Promise(res => window.onload = res);
 
@@ -120,6 +150,7 @@ window.onmousemove = ev => {
   mouseHex = hex.offsetToAxial(mouse);
 };
 
+setInterval(tickLight, 1000);
 
 (function frame() {
   const { width, height } = canvas;
@@ -129,8 +160,9 @@ window.onmousemove = ev => {
   ctx.save();
   ctx.translate(width/2, height/2);
 
-  for (const { size, hexPos, color, pos: { x, y } } of map) {
+  for (const [, { size, hexPos, color, pos: { x, y } }] of map) {
     ctx.fillStyle = v2.eq(hexPos, mouseHex) ? "red" : color;
+    ctx.globalAlpha = lightAt(hexPos);
     ctx.beginPath();
     for (let i = 0; i < 6; i++) {
       const r = Math.PI * 2 * (i / 6) + Math.PI/4;
@@ -139,6 +171,7 @@ window.onmousemove = ev => {
     }
     ctx.fill();
   }
+  ctx.globalAlpha = 1.0;
 
   for (const min of minions) {
     const { mulf, norm, sub, add } = v2;
