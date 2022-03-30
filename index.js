@@ -41,11 +41,11 @@ const map = new Map(
         x: 0.7 + 0.3 * (1+sizeXNoise(x, y))/2,
         y: 0.6 + 0.4 * (1+sizeYNoise(x, y))/2,
       }, 32),
-      color: toColor(nLerp(
+      color: nLerp(
         [112,128,144].map(x => x * 0.9),
         [144,112,128].map(x => x * 0.5),
         (1+sizeYNoise(x,y))/2
-      )),
+      ),
     };
   })
   .sort((a, b) => a.pos.y - b.pos.y)
@@ -78,7 +78,6 @@ const tickLight = () => {
           setNext(nhp, calcLightAt(nhp));
   }
   mapLight = next;
-  console.log(next.size);
 }
 
 await new Promise(res => window.onload = res);
@@ -150,7 +149,7 @@ window.onmousemove = ev => {
   mouseHex = hex.offsetToAxial(mouse);
 };
 
-setInterval(tickLight, 1000);
+setInterval(tickLight, 100);
 
 (function frame() {
   const { width, height } = canvas;
@@ -161,8 +160,8 @@ setInterval(tickLight, 1000);
   ctx.translate(width/2, height/2);
 
   for (const [, { size, hexPos, color, pos: { x, y } }] of map) {
-    ctx.fillStyle = v2.eq(hexPos, mouseHex) ? "red" : color;
-    ctx.globalAlpha = lightAt(hexPos);
+    const c = v2.eq(hexPos, mouseHex) ? [255, 0, 0] : color;
+    ctx.fillStyle = toColor(nLerp([47, 43, 49], c, lightAt(hexPos)));
     ctx.beginPath();
     for (let i = 0; i < 6; i++) {
       const r = Math.PI * 2 * (i / 6) + Math.PI/4;
