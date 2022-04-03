@@ -26,7 +26,7 @@ const megaHex = n => [...Array(n)].reduce(
 
 const map = new Map(
   coordsFromSet(setDiff(
-    coordsToSet(megaHex(14)),
+    coordsToSet(megaHex(10)),
     coordsToSet(megaHex(5)),
   ))
   .map(hexPos => {
@@ -53,18 +53,33 @@ const map = new Map(
 );
 const mapAt = hex => map.get(v2.toStr(hex));
 
+let foundTiles = new Set(["0,0"]);
+
 let mapLight = new Map([["0,0", 1]]);
 const lightAt = hex => mapLight.get(v2.toStr(hex)) ?? 0;
 const tickLight = () => {
+  /* let's discover us some tiles! */
+  const tileFound = hex => foundTiles.has(v2.toStr(hex));
+  const findTile = hex => foundTiles.add(v2.toStr(hex));
+  for (const k of foundTiles) {
+    const hp = v2.fromStr(k);
+
+    for (const nhp of hex.neighbors(hp))
+      if (!tileFound(nhp) && !mapAt(nhp)) {
+        findTile(nhp);
+      }
+  }
+
+
   const next = new Map();
   const hasNext = hex => next.has(v2.toStr(hex));
   const setNext = (hex, n) => next.set(v2.toStr(hex), n);
 
   const calcLightAt = hp => {
-    if (hex.neighbors(hp).every(mapAt))
-      return 0.603 * Math.max(...hex.neighbors(hp).map(lightAt));
-    else
+    if (hex.neighbors(hp).some(tileFound))
       return 1;
+    else
+      return 0.603 * Math.max(...hex.neighbors(hp).map(lightAt));
   }
 
   for (const k of mapLight.keys()) {
@@ -179,12 +194,22 @@ setInterval(tickLight, 100);
       min.pos = add(min.pos, mulf(norm(sub(mouse, min.pos)), 3));
 
     for (const otr of minions) if (otr != min) {
-      let delta = v2.sub(otr.pos, min.pos);
+      let delta = sub(otr.pos, min.pos);
       const dist = v2.mag(delta);
       if (dist < 40)
         delta = norm(delta),
         otr.pos = add(otr.pos, mulf(delta, 40 - dist)),
         min.pos = sub(min.pos, mulf(delta, 40 - dist));
+    }
+
+    const hp = hex.offsetToAxial(min.pos);
+    for (const nhp of hex.neighbors(hp)) if (mapAt(nhp)) {
+      const pos = hex.axialToOffset(nhp);
+      
+      let delta = sub(pos, min.pos);
+      const dist = v2.mag(delta);
+      if (dist < 40)
+        min.pos = sub(min.pos, mulf(norm(delta), 40 - dist));
     }
     minion(min.pos);
   }
