@@ -1,6 +1,22 @@
-# The most minimal prototypical iteration of Mohb's Minions
+What follows is the GDD for the most minimal, prototypical iteration of Mohb's Minions.
 
-## The Environment:
+<a class="mk-toclify" id="table-of-contents"></a>
+
+# Table of Contents
+- [The Environment:](#the-environment)
+    - [Pockets](#pockets)
+- [Controls](#controls)
+    - [Rock](#rock)
+    - [Crystal](#crystal)
+    - [Enemy](#enemy)
+    - [Move here!](#move-here)
+    - [Pan around](#pan-around)
+- [Combat](#combat)
+    - [Damage, hitpoints](#damage-hitpoints)
+- [The Plot Arc/Big Picture](#the-plot-arcbig-picture)
+
+<a class="mk-toclify" id="the-environment"></a>
+# The Environment:
 The player controls a group of 1 - 20 minions. They start out with 3.
 
 They occupy an infinite underground environment comprised of destructible hexagonal tiles.
@@ -8,12 +24,13 @@ They occupy an infinite underground environment comprised of destructible hexago
 Their minions are not locked to this grid, and can occupy any point between two tiles,
 as long as either tile is not occupied by rock or any other tile-based obstruction; in short, they can't walk through walls.
 
-### Pockets
+<a class="mk-toclify" id="pockets"></a>
+## Pockets
 Within this environment, there are pockets of air, groups of adjacent hexagons that have already been removed.
 Each pocket sports an "attraction:"
-  - Start: The player begins in a pocket occupied by their starter minions.
-  - Crystal: Other pockets are occupied by crystals, which the player may use to create more minions.
-  - Enemy: Still more pockets are occupied by enemies, which will attempt to destroy the player's minions.
+- Start: The player begins in a pocket occupied by their starter minions.
+- Crystal: Other pockets are occupied by crystals, which the player may use to create more minions.
+- Enemy: Still more pockets are occupied by enemies, which will attempt to destroy the player's minions.
 
 There is always space between the edge of the pocket and the attraction, such that when the player discovers
 a new pocket, they are uncertain of its variety until they venture into it.
@@ -21,10 +38,12 @@ a new pocket, they are uncertain of its variety until they venture into it.
 A dynamic, hexagonally-tiled lighting system prevents the player from viewing pockets that are not connected
 by unoccupied tiles to any of their minions, again preventing them from discerning the nature of unopened pockets.
 
-## Controls
+<a class="mk-toclify" id="controls"></a>
+# Controls
 The only way the player interacts with the world is by clicking.
 
-### Rock
+<a class="mk-toclify" id="rock"></a>
+## Rock
 If they hold the mouse button down a rock, minions begin moving towards that rock.
 
 All minions 3 minion-lengths of the rock begin to take turns smashing themselves against the rock.
@@ -42,7 +61,8 @@ This increases the likelihood that one's tunnel intersects with a pocket, making
 Adjacent rocks onto which minions overflow must be part of the same contiguous body; in other words, one must
 be able to draw a line of occupied rock tiles from the rock the player selected to the rock the minion begins to destroy.
 
-### Crystal
+<a class="mk-toclify" id="crystal"></a>
+## Crystal
 If they hold the mouse button down on a crystal, the same behavior as above occurs, with a few notable exceptions:
 
 Should the number of minions under your command exceed the number of spaces adjacent the crystal selected,
@@ -52,7 +72,8 @@ will never destroy rock instead. The opposite is also true.
 
 Upon the destruction of a crystal, another minion under your command is created.
 
-### Enemy
+<a class="mk-toclify" id="enemy"></a>
+## Enemy
 If the player holds the mouse button down on an enemy, their minions will begin an assault.
 
 Similarly to the rocks and crystals, when one enemy is selected, the minions take this as permission to assault any
@@ -70,19 +91,22 @@ horde. In short, they ain't too clever.
 When the player's minions are within striking range, which is the same distance within which they begin destroying rock,
 they will begin to assault and reduce the hitpoints of the given enemy.
 
-### Move here!
+<a class="mk-toclify" id="move-here"></a>
+## Move here!
 If the mouse is held down and the area underneath the mouse is unoccupied by rock, crystal, enemy, or any other obstruction,
 the player's minions will begin marching towards this point in space in a straight line, without navigating around obstructions.
 
 It is entirely possible to lose an individual minion in a cave somewhere because they got caught on the lip of a tunnel.
 
-### Pan around
+<a class="mk-toclify" id="pan-around"></a>
+## Pan around
 If the player begins moving the mouse immediately after holding it down, rather than interacting with the world,
 they are able to pan the camera, allowing them to navigate maps larger than their screen size. However, because of the
 dynamic lighting system, the game world outside of areas connected by unoccupied tiles to any of their minions will remain
 invisible.
 
-### Combat
+<a class="mk-toclify" id="combat"></a>
+# Combat
 When an enemy is in a "lit" area, meaning that the tile closest to their position is connected by a sequence of unoccupied tiles to
 one underneath a minion, the enemy begins launching projectile based attacks. These projectiles move slowly enough that it may
 be advantageous for the player to deselect an enemy, and instruct their minions to move towards a certain point so that they might
@@ -91,13 +115,15 @@ evade oncoming projectiles.
 Recall that all minions converge upon the same selected point, so what may pull one minion out of harm's
 way may very well lead to another's demise. Nobody said conducting a horde of well-intentioned, but unintelligent minions was easy.
 
-### Damage, hitpoints
+<a class="mk-toclify" id="damage-hitpoints"></a>
+## Damage, hitpoints
 Minions have three limbs. Any projectile that a minion intersects with is absorbed, resulting in the loss of a limb. Minions with no
 remaining limbs are dissolved. Minions with fewer limbs travel more slowly and attack less frequently.
 
 Neither minions nor enemies regain hitpoints passively nor actively. Sustaining an attack renders a minion permanently less valuable.
 
-### The Plot Arc/Big Picture
+<a class="mk-toclify" id="the-plot-arcbig-picture"></a>
+# The Plot Arc/Big Picture
 Discovering crystalline pockets and harvesting the crystals therein is the only way to recoup one's numbers.
 Should the size of one's horde dwindle to zero, the player is rendered impotent. Without a critical mass of at least a single minion,
 there is no way to recoup one's numbers or effect any change in the game world. There are no second chances in supervillainy. After
