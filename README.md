@@ -6,9 +6,10 @@ What follows is the GDD for the most minimal, prototypical iteration of Mohb's M
 - [The Environment:](#the-environment)
     - [Pockets](#pockets)
 - [Controls](#controls)
-    - [Rock](#rock)
-    - [Crystal](#crystal)
-    - [Enemy](#enemy)
+    - [Smash that!](#smash-that)
+        - [Rock](#rock)
+        - [Crystal](#crystal)
+        - [Enemy](#enemy)
     - [Move here!](#move-here)
     - [Pan around](#pan-around)
 - [Combat](#combat)
@@ -36,21 +37,25 @@ There is always space between the edge of the pocket and the attraction, such th
 a new pocket, they are uncertain of its variety until they venture into it.
 
 A dynamic, hexagonally-tiled lighting system prevents the player from viewing pockets that are not connected
-by unoccupied tiles to any of their minions, again preventing them from discerning the nature of unopened pockets.
+by unoccupied tiles to any of their minions, again preventing them from discerning the nature (or location!) of unopened pockets.
 
 <a class="mk-toclify" id="controls"></a>
 # Controls
 The only way the player interacts with the world is by clicking.
 
+<a class="mk-toclify" id="smash-that"></a>
+## Smash that!
+If the player holds the mouse down over any of the following, their minions will proceed accordingly:
+
 <a class="mk-toclify" id="rock"></a>
-## Rock
+### Rock
 If they hold the mouse button down a rock, minions begin moving towards that rock.
 
-All minions 3 minion-lengths of the rock begin to take turns smashing themselves against the rock.
+All minions within 3 minion-lengths of the rock begin to take turns smashing themselves against the rock.
 
-An individual rock under assault by a determined group of minions lasts only a few seconds.
+An individual rock under assault by a determined group of minions lasts less than a second.
 
-Only six minions can surround any given rock given their relative sizes and the constraints of the Cartesian plane.
+Only six minions can surround any given rock due to their relative sizes and the constraints of the Cartesian plane.
 
 If the number of minions you have exceeds the number of spaces adjacent the selected rock,
 unoccupied minions will begin assaulting adjacent rocks instead.
@@ -62,18 +67,17 @@ Adjacent rocks onto which minions overflow must be part of the same contiguous b
 be able to draw a line of occupied rock tiles from the rock the player selected to the rock the minion begins to destroy.
 
 <a class="mk-toclify" id="crystal"></a>
-## Crystal
+### Crystal
 If they hold the mouse button down on a crystal, the same behavior as above occurs, with a few notable exceptions:
 
 Should the number of minions under your command exceed the number of spaces adjacent the crystal selected,
-
 minions will overflow to adjacent crystals, but not adjacent rocks. In other words, minions instructed to destroy crystal
 will never destroy rock instead. The opposite is also true.
 
 Upon the destruction of a crystal, another minion under your command is created.
 
 <a class="mk-toclify" id="enemy"></a>
-## Enemy
+### Enemy
 If the player holds the mouse button down on an enemy, their minions will begin an assault.
 
 Similarly to the rocks and crystals, when one enemy is selected, the minions take this as permission to assault any
