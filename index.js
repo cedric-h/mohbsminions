@@ -1,6 +1,6 @@
 import * as v2 from "./vec2.js"
 import * as hex from "./hex.js"
-import * as ease from "./ease.js"
+import * as draw from "./draw.js"
 import SimplexNoise from "https://cdn.skypack.dev/simplex-noise@3.0.1";
 
 const lerp = (a, b, t) => (1 - t) * a + t * b;
@@ -97,52 +97,18 @@ const tickLight = () => {
 
 await new Promise(res => window.onload = res);
 
+
 /* let's get this party started */
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext('2d');
-
-
-/* these drawing utils'll come in handy */
-const circle = (x, y, radius) => {
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI*2);
-  ctx.fill();
-}
-const ellipse = (x, y, rx, ry) => {
-  ctx.beginPath();
-  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI*2);
-  ctx.fill();
-}
-const minion = pos => {
-  let { x, y } = pos;
-  ctx.fillStyle = "#90a4ae";
-  y += 6 * Math.sin(Date.now() / 150);
-  circle(x, y, 10);
-  for (let i = 0; i < 3; i++) {
-    ctx.fillStyle = "#8ca0aa";
-    const r = ((i / 3) + Math.sin(Date.now() / 1500)) * Math.PI*2;
-    let space, t = Date.now() / 1000 % 2;
-    if (t > 1)
-      space = ease.inBack(1 - (t - 1));
-    else
-      space = ease.outBounce(t);
-
-    circle(x + Math.cos(r) * (6 + space*4),
-           y + Math.sin(r) * (6 + space*4), 7);
-  }
-  ctx.fillStyle = "#CDE7F1";
-  ellipse(x, y, 7, 4);
-  ctx.fillStyle = "#29A0CB";
-  const d = v2.mulf(v2.norm(v2.sub(mouse, pos)), 3);
-  circle(x + d.x, y + d.y, 3);
-}
-
+draw.init(ctx);
 
 /* i want fullscreen, goddamnit */
 (window.onresize = () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 })();
+
 
 let minions = [
   { pos: { x:  0, y:  0 } },
@@ -155,15 +121,25 @@ let minions = [
 /* yoink what we need out of the browser */
 let mouse = { x: 0, y: 0 };
 let mouseHex = { x: 0, y: 0 };
-let mousedown = false;
-window.onmousedown = () => mousedown = true;
-window.onmouseup = () => mousedown = false;
-window.onmousemove = ev => {
+let mouseAction = "none"; /* none | smash | move */
+const updateMousePos = ev => {
   mouse.x = ev.pageX - canvas.width/2;
   mouse.y = ev.pageY - canvas.height/2;
   mouseHex = hex.offsetToAxial(mouse);
 };
+window.onmousedown = ev => {
+  updateMousePos(ev);
 
+  if (mapAt(mouseHex))
+    mouseAction = "smash";
+  else
+    mouseAction = "move";
+};
+window.onmouseup = () => mouseAction = "none";
+window.onmousemove = updateMousePos;
+
+
+/* update loops */
 setInterval(tickLight, 100);
 
 (function frame() {
@@ -174,25 +150,19 @@ setInterval(tickLight, 100);
   ctx.save();
   ctx.translate(width/2, height/2);
 
-  for (const [, { size, hexPos, color, pos: { x, y } }] of map) {
+  for (const [, { size, hexPos, color, pos }] of map) {
     const c = v2.eq(hexPos, mouseHex) ? [255, 0, 0] : color;
     ctx.fillStyle = toColor(nLerp([47, 43, 49], c, lightAt(hexPos)));
-    ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-      const r = Math.PI * 2 * (i / 6) + Math.PI/4;
-      ctx[i ? 'lineTo' : 'moveTo'](x + Math.cos(r) * size.x,
-                                   y + Math.sin(r) * size.y);
-    }
-    ctx.fill();
+    draw.hex(pos.x, pos.y, size);
   }
-  ctx.globalAlpha = 1.0;
 
   for (const min of minions) {
     const { mulf, norm, sub, add } = v2;
 
-    if (mousedown)
+    if (mouseAction == "move")
       min.pos = add(min.pos, mulf(norm(sub(mouse, min.pos)), 3));
 
+    /* minion vs. minion physics */
     for (const otr of minions) if (otr != min) {
       let delta = sub(otr.pos, min.pos);
       const dist = v2.mag(delta);
@@ -202,6 +172,7 @@ setInterval(tickLight, 100);
         min.pos = sub(min.pos, mulf(delta, 40 - dist));
     }
 
+    /* minion vs. tilemap physics */
     const hp = hex.offsetToAxial(min.pos);
     for (const nhp of hex.neighbors(hp)) if (mapAt(nhp)) {
       const pos = hex.axialToOffset(nhp);
@@ -211,7 +182,8 @@ setInterval(tickLight, 100);
       if (dist < 40)
         min.pos = sub(min.pos, mulf(norm(delta), 40 - dist));
     }
-    minion(min.pos);
+
+    draw.minion({ pos: min.pos, lookAt: mouse });
   }
   
   ctx.restore();
