@@ -131,7 +131,7 @@ Neither minions nor enemies regain hitpoints passively nor actively. Sustaining 
 Discovering crystalline pockets and harvesting the crystals therein is the only way to recoup one's numbers.
 Should the size of one's horde dwindle to zero, the player is rendered impotent. Without a critical mass of at least a single minion,
 there is no way to recoup one's numbers or effect any change in the game world. There are no second chances in supervillainy. After
-having lost, one may, however, continue to pan around and cavernous tracts one laid waste to in their doomed quest to amass an
+having lost, one may, however, continue to pan around the cavernous tracts one laid waste to in their doomed quest to amass an
 insurmountable horde.
 
 Due to the difficulty of boring tunnels when the size of one's horde dwindles, the game slows down considerably,
