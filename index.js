@@ -121,13 +121,13 @@ draw.init(ctx);
 
 
 let minions = [
-  { pos: { x:  0, y:  0 } },
+  // { pos: { x:  0, y:  0 } },
   { pos: { x: 30, y: 20 } },
   { pos: { x: 60, y: -20 } },
   { pos: { x: -30, y: 20 } },
-  { pos: { x:  30, y: 20 } },
-  { pos: { x: -60, y: -20 } },
-  { pos: { x: -60, y: 20 } },
+  // { pos: { x:  30, y: 20 } },
+  // { pos: { x: -60, y: -20 } },
+  // { pos: { x: -60, y: 20 } },
 ];
 let attacks = new Map();
 
@@ -323,9 +323,9 @@ requestAnimationFrame(function frame(now) {
     // draw.circle(min.pos.x, min.pos.y, 2);
   }
 
-  ctx.fillStyle = "blue";
-  for (const {x, y} of smashSpots)
-    draw.hex(x, y, { x: 5, y: 5 });
+  // ctx.fillStyle = "blue";
+  // for (const {x, y} of smashSpots)
+    // draw.hex(x, y, { x: 5, y: 5 });
 
   ctx.restore();
 
