@@ -244,7 +244,8 @@ requestAnimationFrame(function frame(now) {
     const attacker = poised.sort(_ => 0.5 - Math.random())[0];
     if (attacker) {
       const ATTACK_DURATION = 1000;
-      const endPos = hex.axialToOffset(v2.fromStr(target));
+      let endPos = hex.axialToOffset(v2.fromStr(target));
+      endPos = v2.lerp(attacker.pos, endPos, 0.8);
       map.get(target).smackT = now + ATTACK_DURATION * 0.35;
       setTimeout(() => {
         if (!map.has(target)) return;
@@ -304,6 +305,7 @@ requestAnimationFrame(function frame(now) {
     }
 
     let pos = min.pos;
+    let smackProg;
     if (min.attack) {
       const { startT, endT, endPos } = min.attack;
 
@@ -315,10 +317,11 @@ requestAnimationFrame(function frame(now) {
           t = ease.inOutElastic(t * 2);
         else
           t = 1.0 - ease.inBack(2 * (t - 0.5));
+        smackProg = t;
         pos = v2.lerp(pos, endPos, t);
       }
     }
-    draw.minion({ pos, lookAt });
+    draw.minion({ pos, lookAt, smackProg });
     // ctx.fillStyle = "cyan";
     // draw.circle(min.pos.x, min.pos.y, 2);
   }

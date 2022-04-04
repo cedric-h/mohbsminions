@@ -32,7 +32,7 @@ export const hex = (x, y, size, rot=0, hp=1) => {
   }
   ctx.fill();
 }
-export const minion = ({ pos, lookAt }) => {
+export const minion = ({ pos, lookAt, smackProg }) => {
   let { x, y } = pos;
   ctx.fillStyle = "#90a4ae";
   y += 6 * Math.sin(Date.now() / 150);
@@ -41,10 +41,13 @@ export const minion = ({ pos, lookAt }) => {
     ctx.fillStyle = "#8ca0aa";
     const r = ((i / 3) + Math.sin(Date.now() / 1500)) * Math.PI*2;
     let space, t = Date.now() / 1000 % 2;
+
     if (t > 1)
       space = ease.inBack(1 - (t - 1));
     else
       space = ease.outBounce(t);
+    
+    if (smackProg) space = 1 - smackProg;
 
     circle(x + Math.cos(r) * (6 + space*4),
            y + Math.sin(r) * (6 + space*4), 7);
