@@ -15,6 +15,9 @@ export const dot = (a, b) => a.x * b.x + a.y * b.y;
 export const mag = (a) => Math.sqrt(dot(a, a));
 export const norm = (a) => divf(a, mag(a) || 1);
 
+export const dist = (a, b) => mag(sub(a, b));
+export const lerp = (a, b, t) => add(mulf(a, 1 - t), mulf(b, t));
+
 export const toStr = ({ x, y }) => x+","+y;
 export const fromStr = str => {
   const [x, y] = str.split(",").map(n => +n);

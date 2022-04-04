@@ -14,12 +14,21 @@ export const ellipse = (x, y, rx, ry) => {
   ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI*2);
   ctx.fill();
 }
-export const hex = (x, y, size) => {
+export const hex = (x, y, size, rot=0, hp=1) => {
   ctx.beginPath();
   for (let i = 0; i < 6; i++) {
-    const r = Math.PI * 2 * (i / 6) + Math.PI/4;
-    ctx[i ? 'lineTo' : 'moveTo'](x + Math.cos(r) * size.x,
-                                 y + Math.sin(r) * size.y);
+    let r = Math.PI * 2 * (i / 6) + Math.PI/4 + rot;
+    const damage = hp < 1 && i/6 > hp/3;
+    const mhp = damage ? ease.outExpo(hp) : 1;
+    ctx[i ? 'lineTo' : 'moveTo'](x + Math.cos(r) * size.x * mhp,
+                                 y + Math.sin(r) * size.y      );
+    // if (damage) {
+    //   const hpr = Math.PI * (2/6) * (1 - hp);
+    //   ctx.lineTo(x + Math.cos(r + hpr/2) * size.x * hp,
+    //              y + Math.sin(r + hpr/2) * size.y * hp);
+    //   ctx.lineTo(x + Math.cos(r + hpr  ) * size.x,
+    //              y + Math.sin(r + hpr  ) * size.y);
+    // }
   }
   ctx.fill();
 }
